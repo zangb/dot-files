@@ -1,0 +1,190 @@
+# Fubutea's i3 config file
+#
+# See https://i3wm.org/docs/userguide.html for a complete reference!
+
+###############################################################################
+# Variables
+###############################################################################
+
+# background
+set $sumi_ink_0     #1F1F28
+# surface / ui
+set $sumi_ink_1     #2A2A37
+set $sumi_ink_2     #363646
+# foreground
+set $fuji_white     #DCD7BA
+# accents
+set $peach_red      #FF5D62
+set $spring_green   #98BB6C
+set $carp_yellow    #E6C384
+set $spring_blue    #7FB4CA
+set $sakura_pink    #D27E99
+set $oni_violet     #957FB8
+
+set $mod            	            Mod4
+set $smod           	            Shift
+
+set $wm_key_left                    h
+set $wm_key_right                   l
+set $wm_key_up                      k
+set $wm_key_down                    j
+
+set $wm_app_terminal    	        alacritty
+set $wm_app_browser                 firefox
+set $wm_app_compositor              picom
+
+set $wm_font                        pango:Source Sans Pro, Semibold 11
+
+set $wm_gap_width                   2
+set $wm_gap_height                  2
+
+set $wm_border_size                 2
+
+set $wm_bar_position                bottom
+set $wm_bar_mode                    dock
+set $wm_bar_font                    pango:Source Sans Pro, Semibold 11
+set $wm_bar_separator               " - "
+set $wm_bar_status_cmd              i3status
+set $wm_bar_trayoutput              full
+
+###############################################################################
+# Applications
+###############################################################################
+
+bindsym $mod+Return exec $wm_app_terminal
+bindsym $mod+$smod+Return exec $wm_app_browser
+bindsym $mod+d exec "dmenu_run -nf '$fuji_white' -nb '$sumi_ink_0' -sb '$sumi_ink_0' -sf '$fuji_white' -fn 'monospace-10' -p 'dmenu prompt &gt;'"
+# Run a window compositor (for effects like transparency or full VSync)
+exec_always --no-startup-id $wm_app_compositor
+
+###############################################################################
+# Workspaces
+###############################################################################
+
+set $ws1  "    1    "
+set $ws2  "    2    "
+set $ws3  "    3    "
+set $ws4  "    4    "
+set $ws5  "    5    "
+set $ws6  "    6    "
+set $ws7  "    7    "
+set $ws8  "    8    "
+set $ws9  "    9    "
+set $ws10 "    10    "
+
+# Switch to workspace n
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+bindsym $mod+0 workspace $ws10
+
+# Move focused container to workspace n
+bindsym $mod+$smod+1 move container to workspace $ws1
+bindsym $mod+$smod+2 move container to workspace $ws2
+bindsym $mod+$smod+3 move container to workspace $ws3
+bindsym $mod+$smod+4 move container to workspace $ws4
+bindsym $mod+$smod+5 move container to workspace $ws5
+bindsym $mod+$smod+6 move container to workspace $ws6
+bindsym $mod+$smod+7 move container to workspace $ws7
+bindsym $mod+$smod+8 move container to workspace $ws8
+bindsym $mod+$smod+9 move container to workspace $ws9
+bindsym $mod+$smod+0 move container to workspace $ws10
+
+### Window sizes and positions ###
+# Change focus
+bindsym $mod+$wm_key_left        focus left
+bindsym $mod+$wm_key_down        focus down
+bindsym $mod+$wm_key_up          focus up
+bindsym $mod+$wm_key_right       focus right
+
+# Move focused window
+bindsym $mod+$smod+$wm_key_left  move left
+bindsym $mod+$smod+$wm_key_down  move down
+bindsym $mod+$smod+$wm_key_up    move up
+bindsym $mod+$smod+$wm_key_right move right
+
+###############################################################################
+# Window settings
+###############################################################################
+
+exec feh --recursive --bg-fill ~/pictures/backgrounds/*
+# Sets the positioning of the monitors
+exec --no-startup-id xrandr --output HDMI-1 --auto --left-of HDMI-0
+
+popup_during_fullscreen smart
+
+###############################################################################
+# Font
+###############################################################################
+
+font $wm_font
+
+###############################################################################
+# Gaps
+###############################################################################
+
+gaps horizontal     $wm_gap_width
+gaps vertical       $wm_gap_height
+smart_gaps on
+
+###############################################################################
+# Borders
+###############################################################################
+
+default_border pixel $wm_border_size
+default_border pixel $wm_border_size
+smart_borders on
+
+# class                 border              background          text                indicator           child_border
+client.focused          $spring_blue        $sumi_ink_2         $carp_yellow        $sumi_ink_2         $spring_blue
+client.focused_inactive $sakura_pink        $sumi_ink_2         $fuji_white         $sumi_ink_2         $sakura_pink
+client.unfocused        $oni_violet         $sumi_ink_2         $fuji_white         $sumi_ink_2         $oni_violet
+client.urgent           $peach_red          $sumi_ink_2         $fuji_white         $sumi_ink_2         $peach_red
+client.placeholder      $oni_violet         $sumi_ink_2         $fuji_white         $sumi_ink_2         $oni_violet
+client.background       $sumi_ink_0
+
+bar {
+    position                        $wm_bar_position
+    mode                            $wm_bar_mode
+    font                            $wm_bar_font
+    separator_symbol                $wm_bar_separator
+    status_command                  $wm_bar_status_cmd
+    tray_output                     $wm_bar_trayoutput
+
+    colors {
+        background $sumi_ink_0
+        statusline $fuji_white
+        separator  $fuji_white
+
+        focused_workspace  $spring_blue $sumi_ink_1 $fuji_white
+        active_workspace   $sakura_pink $sumi_ink_1 $fuji_white
+        inactive_workspace $oni_violet  $sumi_ink_1 $fuji_white
+        urgent_workspace   $peach_red   $sumi_ink_1 $fuji_white
+    }
+}
+
+###############################################################################
+# Miscellaneous Settings
+###############################################################################
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# Enter fullscreen mode for the focused window
+bindsym $mod+f fullscreen toggle
+
+# Kill the focused window
+bindsym $mod+$smod+q kill
+
+# Restart i3 inplace (preserves layout / session, can be used to upgrade i3)
+bindsym $mod+$smod+r restart
+
+# Exit i3 (logs you out of your X session)
+bindsym $mod+$smod+e exec "i3-nagbar -t warning -m "Do you want to exit i3? This will end your X session.""
+

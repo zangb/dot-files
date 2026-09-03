@@ -1,0 +1,73 @@
+# Fubutea's alacritty config file
+# For more details, see https://alacritty.org/config-alacritty.html
+
+working_directory = "None"
+
+[window]
+opacity = 0.8
+[scrolling]
+history = 2000
+multiplier = 3
+
+[terminal]
+shell = "/bin/zsh"
+
+# Fonts
+[font.normal]
+family = "monospace"
+style = "Regular"
+
+[font.bold]
+style = "Bold"
+
+[font.italic]
+style = "Italic"
+
+[font.bold_italic]
+style = "Bold Italic"
+
+# Colours
+[colors]
+transparent_background_colors = true
+
+[colors.primary]
+foreground = "#dcd7ba"
+background = "#1f1f28"
+
+[colors.cursor]
+text = "#1f1f28"
+cursor = "#dcd7ba"
+
+[colors.selection]
+text = "#c8c093"
+background = "#2d4f67"
+
+[colors.normal]
+black = "#16161d"
+red = "#c34043"
+green = "#76946a"
+yellow = "#c0a36e"
+blue = "#7e9cd8"
+magenta = "#957fb8"
+cyan = "#6a9589"
+white = "#c8c093"
+
+[colors.bright]
+black = "#727169"
+red = "#e82424"
+green = "#98bb6c"
+yellow = "#e6c384"
+blue = "#7fb4ca"
+magenta = "#938aa9"
+cyan = "#7aa89f"
+white = "#dcd7ba"
+
+[selection]
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+save_to_clipboard = false
+
+[cursor]
+style = {shape= "Block", blinking = "Off"}
+vi_mode_style = "None"
+thickness = 0.15
+
