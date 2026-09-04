@@ -4,7 +4,7 @@
 working_directory = "None"
 
 [window]
-opacity = 0.8
+opacity = 0.9
 [scrolling]
 history = 2000
 multiplier = 3

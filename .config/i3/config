@@ -38,9 +38,9 @@ set $wm_font                        pango:Source Sans Pro, Semibold 11
 set $wm_gap_width                   2
 set $wm_gap_height                  2
 
-set $wm_border_size                 2
+set $wm_border_size                 3
 
-set $wm_bar_position                bottom
+set $wm_bar_position                top
 set $wm_bar_mode                    dock
 set $wm_bar_font                    pango:Source Sans Pro, Semibold 11
 set $wm_bar_separator               " - "
@@ -50,10 +50,24 @@ set $wm_bar_trayoutput              full
 ###############################################################################
 # Applications
 ###############################################################################
+# Pulse Audio controls
+bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume 0 +5% #increase sound volume
+bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume 0 -5% #decrease sound volume
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute 0 toggle # mute sound
+
+# Sreen brightness controls
+bindsym XF86MonBrightnessUp exec xbacklight -inc 20 # increase screen brightness
+bindsym XF86MonBrightnessDown exec xbacklight -dec 20 # decrease screen brightness
+
+# Media player controls
+bindsym XF86AudioPlay exec playerctl play
+bindsym XF86AudioPause exec playerctl pause
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPrev exec playerctl previous
 
 bindsym $mod+Return exec $wm_app_terminal
 bindsym $mod+$smod+Return exec $wm_app_browser
-bindsym $mod+d exec "dmenu_run -nf '$fuji_white' -nb '$sumi_ink_0' -sb '$sumi_ink_0' -sf '$fuji_white' -fn 'monospace-10' -p 'dmenu prompt &gt;'"
+bindsym $mod+d exec "dmenu_run -nf '$fuji_white' -nb '$sumi_ink_0' -sb '$sumi_ink_0' -sf '$fuji_white' -fn 'monospace-10'"
 # Run a window compositor (for effects like transparency or full VSync)
 exec_always --no-startup-id $wm_app_compositor
 
@@ -142,8 +156,8 @@ default_border pixel $wm_border_size
 smart_borders on
 
 # class                 border              background          text                indicator           child_border
-client.focused          $spring_blue        $sumi_ink_2         $carp_yellow        $sumi_ink_2         $spring_blue
-client.focused_inactive $sakura_pink        $sumi_ink_2         $fuji_white         $sumi_ink_2         $sakura_pink
+client.focused          $carp_yellow        $sumi_ink_2         $carp_yellow        $sumi_ink_2         $carp_yellow
+client.focused_inactive $oni_violet         $sumi_ink_2         $fuji_white         $sumi_ink_2         $oni_violet
 client.unfocused        $oni_violet         $sumi_ink_2         $fuji_white         $sumi_ink_2         $oni_violet
 client.urgent           $peach_red          $sumi_ink_2         $fuji_white         $sumi_ink_2         $peach_red
 client.placeholder      $oni_violet         $sumi_ink_2         $fuji_white         $sumi_ink_2         $oni_violet
