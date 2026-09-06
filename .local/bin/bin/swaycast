@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+
+# swaycast - very simple Screencast helper for Sway
+#
+# Copyright (C) 2025 joekamprad
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# needed packages: sudo pacman -Syu --needed slurp wf-recorder xdg-user-dirs inotify-tools
+# this tool lets you select rectangle area of your screen [swaycast], and start recording that area.
+# to also include audio use [swaycast audio]
+# to stop press [swaycast stop] or use: swaycast stop
+# help: swaycast help
+
+LOGFILE="/tmp/swaycast.log"
+mkdir -p "$(dirname "$LOGFILE")"
+exec >>"$LOGFILE" 2>&1
+
+PIDFILE="/tmp/wf-recorder.pid"
+AUDIOFLAG="/tmp/wf-recorder.audio"
+
+# Save original stdout/stderr for help and error messages
+ORIG_STDOUT=$(tty)
+ORIG_STDERR=$(tty)
+
+# === Check required dependencies ===
+REQUIRED_PKGS=(slurp wf-recorder xdg-user-dirs inotify-tools libnotify)
+
+missing=()
+for pkg in "${REQUIRED_PKGS[@]}"; do
+  if ! pacman -Qi "$pkg" &>/dev/null; then
+    missing+=("$pkg")
+  fi
+done
+
+if (( ${#missing[@]} > 0 )); then
+  # Desktop-Benachrichtigung
+  notify-send -u critical -i dialog-error \
+    "Missing dependencies for swaycast" \
+    "Please install: ${missing[*]}"
+
+  # Ausgabe auf stderr
+  echo "Error: Missing dependencies: ${missing[*]}" >&2
+  exit 1
+fi
+# ====================================
+
+# --- Option handling ---
+if [[ $# -gt 0 ]]; then
+    case "$1" in
+        help|--help)
+            cat << EOF >"$ORIG_STDOUT"
+Swaycast - Screencast script for Sway
+Source: https://github.com/killajoe/sway_tools/tree/main/swaycast
+Copyright (C) 2025 joekamprad
+License: GPL-3.0-or-later
+
+Usage: swaycast [audio|stop|help]
+
+Options:
+  audio      Record with audio
+  stop       Stop current recording
+  help       Show this help message
+
+Notes:
+  - Use '--release' in Sway keybindings to avoid multiple slurp overlays
+  - Notifications are handled with notify-send
+
+Example Sway config bindings:
+
+# Start recording (select area)
+bindsym --release \$mod+Shift+y exec \$HOME/.config/sway/scripts/swaycast
+
+# Start recording (select area, with audio)
+bindsym --release \$mod+Shift+a exec \$HOME/.config/sway/scripts/swaycast audio
+
+# Stop recording
+bindsym --release \$mod+Shift+x exec \$HOME/.config/sway/scripts/swaycast stop
+
+EOF
+            exit 0
+            ;;
+        audio|stop)
+            # valid options, continue
+            ;;
+        *)
+            echo "Error: Unknown option '$1'" >"$ORIG_STDERR"
+            exit 1
+            ;;
+    esac
+fi
+
+# --- Stop recording ---
+if [[ "$1" == "stop" ]]; then
+  PID=$(cat "$PIDFILE" 2>/dev/null)
+  if [ -n "$PID" ]; then
+    kill "$PID"
+    if [[ -f "$AUDIOFLAG" ]]; then
+      notify-send -i media-playback-stop "Screencast (with audio) stopped" "finalizing file, please wait..."
+      rm -f "$AUDIOFLAG"
+    else
+      notify-send -i media-playback-stop "Screencast stopped" "finalizing file, please wait..."
+    fi
+    rm -f "$PIDFILE"
+  else
+    notify-send -i dialog-error "No running Screencast found"
+  fi
+  exit 0
+fi
+
+# --- Prepare target filename ---
+VIDEOS_DIR=$(xdg-user-dir VIDEOS 2>/dev/null)
+if [ -z "$VIDEOS_DIR" ]; then
+    VIDEOS_DIR="$HOME/Videos"
+fi
+
+SCREENCAST_DIR="$VIDEOS_DIR/screencasts"
+mkdir -p "$SCREENCAST_DIR"
+DATE=$(date '+%Y-%m-%d_%H-%M-%S')
+FILENAME="screencast_$DATE.mp4"
+TARGET="$SCREENCAST_DIR/$FILENAME"
+
+# --- Select recording area ---
+SEL=$(slurp)
+if [[ -z "$SEL" ]]; then
+    notify-send -i dialog-error "No area selected" "Recording cancelled."
+    exit 1
+fi
+
+# Multi-display safe: strip output prefix if present
+GEOM=$(echo "$SEL" | sed 's/^[^:]*://')
+
+# --- Build command ---
+if [[ "$1" == "audio" ]]; then
+  wf-recorder -g "$GEOM" -f "$TARGET" --audio &
+  touch "$AUDIOFLAG"
+else
+  wf-recorder -g "$GEOM" -f "$TARGET" &
+  rm -f "$AUDIOFLAG"
+fi
+
+PID=$!
+
+notify-send -i media-record "Screencast running" "stop with shortcut <b>mod+shift+X</b> or kill $PID"
+
+# Save PID
+echo $PID > "$PIDFILE"
+
+# Wait for recording to finish
+wait $PID
+
+# Wait until file is fully written/closed
+last_size=0
+for i in {1..30}; do
+  size=$(stat -c %s "$TARGET" 2>/dev/null || echo 0)
+  if [[ "$size" -eq "$last_size" && "$size" -gt 0 ]]; then
+    break
+  fi
+  last_size=$size
+  sleep 1
+done
+
+# Final notification (different text if audio was enabled)
+if [[ -f "$AUDIOFLAG" ]]; then
+  notify-send -i document-save "Screencast (with audio) saved" "$TARGET"
+  rm -f "$AUDIOFLAG"
+else
+  notify-send -i document-save "Screencast saved" "$TARGET"
+fi

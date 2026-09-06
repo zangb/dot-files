@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# waybar-toggle - toggle disable/enable waybars
+#
+# Copyright (C) 2025 Johannes Kamprad
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+STATEFILE="/tmp/waybar_toggle.state"
+
+if pgrep -x waybar > /dev/null; then
+    # waybar is running lets stop it
+    killall waybar
+    echo "off" > "$STATEFILE"
+else
+    # no waybar running, starting all of them
+    for cfg in ~/.config/waybar/*.jsonc; do
+        # only existing files
+        [[ -f "$cfg" ]] || continue
+
+        # base name should be the same for the jasonc and its css
+        base="${cfg%.jsonc}"
+        style="${base}.css"
+
+        if [[ -f "$style" ]]; then
+            waybar -c "$cfg" -s "$style" &
+        else
+            waybar -c "$cfg" &
+        fi
+    done
+    echo "on" > "$STATEFILE"
+fi

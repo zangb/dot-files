@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# backing up lists of installed packages
+
+# Set strict error handling
+set -euo pipefail
+
+# Define output paths using HOME variable
+AUR_LIST="${HOME}/packages-AUR.txt"
+REPO_LIST="${HOME}/packages-repository.txt"
+
+# Export explicit foreign/AUR packages (installed from AUR or manually)
+if ! pacman -Qqem > "$AUR_LIST"; then
+    echo "Error: Failed to export AUR package list." >&2
+    exit 1
+fi
+
+# Export native repository packages (explicitly installed, excluding dependencies)
+if ! pacman -Qqetn > "$REPO_LIST"; then
+    echo "Error: Failed to export repository package list." >&2
+    exit 1
+fi
+
+# Count the exported packages
+AUR_COUNT=$(wc -l < "$AUR_LIST")
+REPO_COUNT=$(wc -l < "$REPO_LIST")
+
+# Print success message with file locations and counts
+echo "Package lists successfully updated:"
+echo "  - AUR/Foreign:  $AUR_LIST ($AUR_COUNT packages)"
+echo "  - Repository:   $REPO_LIST ($REPO_COUNT packages)"

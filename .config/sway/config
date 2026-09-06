@@ -1,0 +1,389 @@
+###############################################################################
+# Variables
+###############################################################################
+
+# background
+set $sumi_ink_0     #1F1F28
+# surface / ui
+set $sumi_ink_1     #2A2A37
+set $sumi_ink_2     #363646
+# foreground
+set $fuji_white     #DCD7BA
+# accents
+set $peach_red      #FF5D62
+set $spring_green   #98BB6C
+set $carp_yellow    #E6C384
+set $spring_blue    #7FB4CA
+set $sakura_pink    #D27E99
+set $oni_violet     #957FB8
+
+set $mod            	            Mod4
+set $smod           	            Shift
+set $ctrl                           Ctrl
+
+set $wm_key_left                    h
+set $wm_key_right                   l
+set $wm_key_up                      k
+set $wm_key_down                    j
+
+set $wm_app_terminal    	        alacritty
+set $wm_app_browser                 firefox
+set $wm_app_compositor              picom
+set $wm_app_file_mgr                thunar
+
+set $wm_font                        pango:Noto Sans, Semibold 11
+
+set $wm_gap_width                   2
+set $wm_gap_height                  2
+set $wm_gap_inner                   2
+set $wm_gap_outer                   2
+
+set $wm_border_size                 2
+
+set $wm_bar_position                top
+set $wm_bar_mode                    hide
+set $wm_bar_font                    pango:Noto Sans, Semibold 11
+set $wm_bar_separator               " - "
+set $wm_bar_status_cmd              i3status
+
+set $gtklock_cmd                    gtklock
+
+# "terminal-alias" will use set terminal from config
+bindsym $mod+Return exec terminal-alias
+bindsym $mod+e exec $wm_app_file_mgr
+bindsym $mod+w exec $wm_app_browser
+
+###############################################################################
+# Environment / Display setup
+###############################################################################
+
+# Import environment and signal graphical session startup to systemd
+exec dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP=sway XDG_RUNTIME_DIR && \
+     systemctl --user import-environment DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_RUNTIME_DIR && \
+     systemctl --user start sway-session.target
+
+# make sure it loads gtk configs
+exec_always $HOME/.local/bin/import-gsettings
+
+# Cursor theme and size
+seat seat0 xcursor_theme Qogir-Dark 16
+
+# set preferred terminal
+# usable with "terminal-alias" in scripts automatically
+# so if set here scripts can use the one you set default
+set $term alacritty
+
+# focus_wrapping
+focus_wrapping yes
+
+# turn on mouse following
+focus_follows_mouse no
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# wallpaper (static set)
+exec_always swaybg -i ~/Pictures/backgrounds/background.jpg -m fill
+
+# On multi display setup you can also set per display
+#exec_always swaybg \
+#  -o DP-3 -i /usr/share/endeavouros/backgrounds/endeavouros-wallpaper.png -m fill \
+#  -o DP-1 -i /usr/share/endeavouros/backgrounds/endeavouros-wallpaper.png -m fill
+# get your display names (DP-3 DP-1) with `swaymsg -t get_outputs`
+
+output "Samsung Display Corp. 0x4171 Unknown" scale 1.25
+
+###############################################################################
+# Autostart
+###############################################################################
+
+# Import DISPLAY, WAYLAND_DISPLAY, SWAYSOCK into user/systemd session
+# so GUI apps started via systemctl or DBus use the correct Wayland display.
+exec systemctl --user import-environment DISPLAY WAYLAND_DISPLAY SWAYSOCK
+exec hash dbus-update-activation-environment 2>/dev/null && \
+     dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK
+
+# Enable swayidle to send idle hints (1 = active) for better idle handling
+exec swayidle idlehint 1
+
+# Sway Notification Center (swaync)
+exec swaync
+
+# set default display (to set screen for notifications to showup)
+# use:
+# swaymsg -t get_outputs | jq -r ' sort_by(.rect.x) | .[].name'
+# to get current connected display names (replace DP-3 with the one you want default)
+
+# exec swaync-client --change-noti-monitor DP-3
+
+# screen locker
+exec_always swayidle -w \
+  timeout 280 'gtklock' \
+  timeout 300 'swaymsg "output * dpms off"' \
+  resume 'swaymsg "output * dpms on"' \
+  before-sleep 'gtklock'
+
+# osd for volume (swayosd)
+exec swayosd-server -s ~/.config/swayosd/style.css
+#On setups with multiple monitors, if you only want to show the osd on the focused monitor
+#swayosd-client --monitor "$(swaymsg -t get_outputs | jq -r '.[] | select(.focused == true).name')" --output-volume raise
+
+#exec swayidle -w timeout 300 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' &
+#exec_always swayidle -w before-sleep "gtklock -d"
+
+# bars/panels (waybar)
+exec waybar -c $HOME/.config/waybar/config.jsonc -s $HOME/.config/waybar/style.css
+
+# Autotiling
+exec autotiling
+
+# Keep clipboard history updated for text and images
+# by watching the clipboard and storing changes in 'cliphist'.
+exec wl-paste --type text --watch cliphist store
+exec wl-paste --type image --watch cliphist store
+
+# autostarting apps (comment with # to stop autostarting)
+
+exec sleep 3 && blueman-applet
+
+## tools/helper
+
+# Start the Polkit authentication agent for GUI privilege prompts
+# so apps can request admin rights in the Sway session.
+exec  /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+
+# saving a backup of installed packages as a list
+exec  sh ~/.local/bin/packagelist.sh
+
+# dex execute .desktop files
+# see here: https://man.archlinux.org/man/extra/dex/dex.1.en
+exec  dex --autostart --environment sway
+
+# osd (on screen display) für volume
+exec swayosd-server -s ~/.config/swayosd/style.css
+exec swayosd-client --monitor "$(swaymsg -t get_outputs | jq -r '.[] | select(.focused == true).name')" --output-volume raise
+
+###############################################################################
+# Window settings
+###############################################################################
+
+### Window sizes and positions ###
+# Change focus
+bindsym $mod+$wm_key_left        focus left
+bindsym $mod+$wm_key_down        focus down
+bindsym $mod+$wm_key_up          focus up
+bindsym $mod+$wm_key_right       focus right
+
+# Move focused window
+bindsym $mod+$smod+$wm_key_left  move left
+bindsym $mod+$smod+$wm_key_down  move down
+bindsym $mod+$smod+$wm_key_up    move up
+bindsym $mod+$smod+$wm_key_right move right
+
+# Resize
+bindsym $mod+$smod+$ctrl+$wm_key_left  resize shrink width 10 px
+bindsym $mod+$smod+$ctrl+$wm_key_down  resize grow height 10 px
+bindsym $mod+$smod+$ctrl+$wm_key_up    resize shrink height 10 px
+bindsym $mod+$smod+$ctrl+$wm_key_right resize grow width 10 px
+
+# Splitting
+bindsym $mod+minus split v
+bindsym $mod+less split h
+
+for_window [app_id="pavucontrol"] floating enable
+for_window [app_id="qt5ct"] floating enable
+for_window [app_id="qt6ct"] floating enable
+for_window [app_id="eos-quickstart"] floating enable
+
+for_window [app_id="blueman-manager"] floating enable
+for_window [app_id="bluetooth-sendto"] floating enable
+for_window [app_id="gpk-application"] floating enable
+for_window [class="Yad" instance="yad"] floating enable
+for_window [app_id="yad"] floating enable
+for_window [app_id="system-config-printer"] floating enable
+for_window [app_id="zoom"] floating enable
+for_window [app_id="nm-connection-editor"] floating enable
+
+for_window [title="Warning"] floating enable
+for_window [app_id="engrampa"] floating enable
+for_window [title="^Welcome v.*$"] floating enable
+
+for_window [window_role="pop-up"] floating enable
+for_window [window_role="bubble"] floating enable
+for_window [window_role="task_dialog"] floating enable
+for_window [window_role="Preferences"] floating enable
+for_window [window_type="dialog"] floating enable
+for_window [window_type="menu"] floating enable
+for_window [window_role="About"] floating enable
+for_window [title="Picture in picture"] floating enable, sticky enable
+
+# Window settings
+# focus new windows even if they open on another workspace
+for_window [class=".*"] focus
+
+# Inhibit idle, if apps are fullscreen omit screensaver
+for_window [app_id="firefox"] inhibit_idle fullscreen
+for_window [app_id="mpv"] inhibit_idle fullscreen
+
+# default sway options for focus indicator
+# set transparency for unfocused windows
+exec python3 ~/.local/bin/inactive-window-transparency.py -o 0.9
+# exclude apps that show changing content
+for_window [app_id="firefox"] opacy 1.0
+for_window [app_id="mpv"] opacy 1.0
+
+###############################################################################
+# Workspaces
+###############################################################################
+
+set $ws1  "    1    "
+set $ws2  "    2    "
+set $ws3  "    3    "
+set $ws4  "    4    "
+set $ws5  "    5    "
+set $ws6  "    6    "
+set $ws7  "    7    "
+set $ws8  "    8    "
+set $ws9  "    9    "
+set $ws10 "    10    "
+
+# Switch to workspace n
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+bindsym $mod+0 workspace $ws10
+
+# Move focused container to workspace n
+bindsym $mod+$smod+1 move container to workspace $ws1
+bindsym $mod+$smod+2 move container to workspace $ws2
+bindsym $mod+$smod+3 move container to workspace $ws3
+bindsym $mod+$smod+4 move container to workspace $ws4
+bindsym $mod+$smod+5 move container to workspace $ws5
+bindsym $mod+$smod+6 move container to workspace $ws6
+bindsym $mod+$smod+7 move container to workspace $ws7
+bindsym $mod+$smod+8 move container to workspace $ws8
+bindsym $mod+$smod+9 move container to workspace $ws9
+bindsym $mod+$smod+0 move container to workspace $ws10
+
+###############################################################################
+# Input
+###############################################################################
+
+# Enable numlock by default
+input type:keyboard xkb_numlock enabled
+
+# Touchpad
+input type:touchpad {
+    dwt enabled
+    tap enabled
+    natural_scroll disabled
+}
+
+# Enable numlock by default
+input type:keyboard xkb_numlock enabled
+
+# Set keyboard layout and variant based on current system settings
+exec_always {
+    'swaymsg input type:keyboard xkb_layout "de"'
+}
+
+###############################################################################
+# Borders
+###############################################################################
+
+gaps horizontal $wm_gap_width
+gaps vertical   $wm_gap_height
+gaps inner      $wm_gap_inner
+gaps outer      $wm_gap_outer
+default_floating_border pixel $wm_border_size
+
+# qt-app fix for title bar:
+for_window [app_id="^.*"] border pixel $wm_border_size
+
+default_border pixel $wm_border_size
+default_border pixel $wm_border_size
+smart_borders  off
+
+# class                 border              background          text                indicator           child_border
+client.focused          $carp_yellow        $sumi_ink_2         $carp_yellow        $sumi_ink_2         $carp_yellow
+client.focused_inactive $oni_violet         $sumi_ink_2         $fuji_white         $sumi_ink_2         $oni_violet
+client.unfocused        $oni_violet         $sumi_ink_2         $fuji_white         $sumi_ink_2         $oni_violet
+client.urgent           $peach_red          $sumi_ink_2         $fuji_white         $sumi_ink_2         $peach_red
+client.placeholder      $oni_violet         $sumi_ink_2         $fuji_white         $sumi_ink_2         $oni_violet
+client.background       $sumi_ink_0
+
+mode "mouse" {
+    # set your three speeds here
+    set $slow 1
+    set $quick 10
+    set $fast 50
+}
+
+# rofi-wayland application menu
+
+bindsym $mod+d exec rofi -modi drun -show drun \
+                -config $HOME/.config/rofi/rofidmenu.rasi
+
+bindsym $mod+Shift+D exec rofi -show window \
+                -config $HOME/.config/rofi/rofidmenu.rasi
+
+# switch output
+bindsym $mod+p exec $HOME/.local/bin/audio-device-switch
+
+# screen lock
+bindsym $mod+Ctrl+l exec gtklock
+
+# exit-menu
+bindsym $mod+Shift+e exec sway-powermenu
+
+## extra keys:
+
+## screenshot
+
+# take a screenshot of a selection:
+bindsym $mod+$smod+s exec --no-startup-id grimshot save area '/tmp/screenshot.png' \
+    && xclip -selection clipboard -t image/png -i /tmp/screenshot.png \
+    && rm /tmp/screenshot.png
+
+## audio keys
+
+# Sink volume raise optionally with --device
+bindsym XF86AudioRaiseVolume exec swayosd-client --output-volume raise
+bindsym XF86AudioLowerVolume exec  swayosd-client --output-volume lower
+bindsym XF86AudioMute exec swayosd-client --output-volume mute-toggle
+bindsym XF86AudioMicMute exec swayosd-client --input-volume mute-toggle
+
+# Brightness raise
+bindsym XF86MonBrightnessUp exec swayosd-client --brightness raise
+
+# Brightness lower
+bindsym XF86MonBrightnessDown exec swayosd-client --brightness lower
+
+# Media player controls (playerctl)
+# https://github.com/altdesktop/playerctl
+bindsym XF86AudioPlay exec  --no-startup-id playerctl play-pause
+#bindsym XF86AudioPause exec  --no-startup-id playerctl pause
+bindsym XF86AudioNext exec  --no-startup-id playerctl next
+bindsym XF86AudioPrev exec  --no-startup-id playerctl previous
+
+###############################################################################
+# Miscellaneous Settings
+###############################################################################
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# Enter fullscreen mode for the focused window
+bindsym $mod+f fullscreen toggle
+
+# Kill the focused window
+bindsym $mod+$smod+q kill
+
+# Reload sway inplace (preserves layout / session, can be used to upgrade i3)
+bindsym $mod+$smod+r reload

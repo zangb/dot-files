@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# only a simple way to output system monitoring on the waybar
+# edit to your needs
+
+# Main System Harddrive free space monitoring
+# shows available space on systemdrive
+# and mouse over (hoover) shows Model Name and total space.
+# needs jq installed
+
+TARGET_MOUNT="/"
+
+# 1. free space on haddrive
+AVAILABLE_SPACE=$(df -h "$TARGET_MOUNT" | awk 'NR==2 {print $4}')
+
+# 2. get harddrive path
+PARTITION_DEV=$(findmnt -no SOURCE "$TARGET_MOUNT" | cut -d'[' -f1)
+
+# 3. find the top level device
+PARENT_DEV=$(lsblk -ndo pkname "$PARTITION_DEV")
+
+# fallback for device research
+if [ -z "$PARENT_DEV" ]; then
+    PARENT_DEV=$(basename "$PARTITION_DEV")
+fi
+
+# 4. try to read modelname of the harddrive
+DISK_NAME=$(lsblk -nod -o VENDOR,MODEL "/dev/$PARENT_DEV" 2>/dev/null | xargs)
+
+# fallback for Harddrive Model research
+if [ -z "$DISK_NAME" ]; then
+    DISK_NAME=$(lsblk -nod -o NAME "/dev/$PARENT_DEV" 2>/dev/null | xargs)
+fi
+
+# 5. JSON generation to output with waybar
+jq -c -n \
+  --arg text "$AVAILABLE_SPACE" \
+  --arg tooltip "$DISK_NAME" \
+  '{"text": $text, "tooltip": $tooltip}'

@@ -1,0 +1,10 @@
+#!/bin/sh
+# only a simple way to output system monitoring on the waybar
+# edit to your needs
+
+# example to be used for m.d2 nvme temeperature monitoring in waybar/i3blocks e.t.c
+# check `sensors` and replace `nvme-pci-0800` and `Sensor 1:` with your values.
+
+temp=$(sensors nvme-pci-0800 2>/dev/null | grep 'Sensor 1:' | grep -oP '\+\d+(\.\d+)?' | head -n1 | tr -d '+')
+
+echo "${temp}°C"

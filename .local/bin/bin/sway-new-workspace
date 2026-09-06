@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# sway-new_workspace - create new empty workspace and move to it for Sway
+#
+# Copyright (C) 2025 Johannes Kamprad
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# new_workspace - create new empty workspace and move to it for Sway
+# needs `jq` package
+
+# Get the current workspaces and find the highest number
+max=$(swaymsg -t get_workspaces | jq '.[].num' | sort -n | tail -1)
+new_workspace=$((max + 1))
+
+# Move to new workspace
+swaymsg workspace number $new_workspace

@@ -1,0 +1,9 @@
+window#osd {
+    background: rgba(31, 31, 40, 0.8);
+    /* semi-transparent purple */
+    border-radius: 12px;
+    /* adjust this value to change roundness */
+    padding: 10px;
+    /* optional: adds some inner spacing */
+    font-size: 16px;
+}
