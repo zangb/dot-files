@@ -141,8 +141,8 @@ bindsym $mod+$smod+$ctrl+$wm_key_up    resize shrink height 10 px
 bindsym $mod+$smod+$ctrl+$wm_key_right resize grow width 10 px
 
 # Splitting
-bindsym $mod+minus split h
-bindsym $mod+less split v
+bindsym $mod+minus split v
+bindsym $mod+less split h
 
 exec feh --recursive --bg-fill ~/pictures/backgrounds/*
 # Sets the positioning of the monitors
